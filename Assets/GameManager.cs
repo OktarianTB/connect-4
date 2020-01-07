@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
@@ -23,12 +24,14 @@ public class GameManager : MonoBehaviour
     public Color player1Color, player2Color, highlightedColor, normalColor;
     private int previouslyHighlighted = -1;
 
+    public GameObject player1Text, player2Text;
+
     void Start()
     {
         boardSetup = FindObjectOfType<Setup>();
 
         gameState = UnityEngine.Random.Range(0, 2) == 0 ? State.player1 : State.player2;
-        print(gameState.ToString() + " starts!");
+        UpdatePlayerText();
 
         columns = boardSetup.columns;
         rows = boardSetup.rows;
@@ -37,12 +40,18 @@ public class GameManager : MonoBehaviour
         startPosX = boardSetup.bottomLeft.position.x;
     }
 
+    private void UpdatePlayerText()
+    {
+        player1Text.SetActive(gameState == State.player1);
+        player2Text.SetActive(gameState == State.player2);
+    }
+
     private void OnMouseDown()
     {
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         int selectedColumn = GetColumn(mousePosition);
 
-        if(selectedColumn == 0)
+        if(selectedColumn == -1)
         {
             return;
         }
@@ -51,15 +60,16 @@ public class GameManager : MonoBehaviour
         for (int i = startIndex; i < startIndex + rows; i++)
         {
             GameObject coinObject = boardSetup.circles[i];
-            if (coinObject.GetComponent<Coin>().isEmpty)
+            Coin coin = coinObject.GetComponent<Coin>();
+            if (coin.isEmpty)
             {
                 coinObject.GetComponent<SpriteRenderer>().color = gameState == State.player1 ? player1Color : player2Color;
 
-                Coin coin = coinObject.GetComponent<Coin>();
                 coin.isEmpty = false;
                 coin.isPlayer1 = gameState == State.player1 ? true : false;
 
                 gameState = gameState == State.player1 ? State.player2 : State.player1;
+                UpdatePlayerText();
                 break;
             }
         }
@@ -71,23 +81,28 @@ public class GameManager : MonoBehaviour
         Vector2 mousePosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         int selectedColumn = GetColumn(mousePosition);
 
-        if (previouslyHighlighted != -1)
+        if(selectedColumn <= 0 || selectedColumn > columns)
         {
-            ClearHighlighted(previouslyHighlighted);
+            return;
         }
 
-        HighlightColumn(selectedColumn);
+        if (previouslyHighlighted != -1)
+        {
+            HighlightColumn(previouslyHighlighted, normalColor);
+        }
+
+        HighlightColumn(selectedColumn, highlightedColor);
         previouslyHighlighted = selectedColumn;
 
     }
 
     private void OnMouseExit()
     {
-        ClearHighlighted(previouslyHighlighted);
+        HighlightColumn(previouslyHighlighted, normalColor);
         previouslyHighlighted = -1;
     }
 
-    private void HighlightColumn(int columnIndex)
+    private void HighlightColumn(int columnIndex, Color color)
     {
         int startIndex = (columnIndex - 1) * rows;
         for (int i = startIndex; i < startIndex + rows; i++)
@@ -100,20 +115,7 @@ public class GameManager : MonoBehaviour
             GameObject coinObject = boardSetup.circles[i];
             if (coinObject.GetComponent<Coin>().isEmpty)
             {
-                coinObject.GetComponent<SpriteRenderer>().color = highlightedColor;
-            }
-        }
-    }
-
-    private void ClearHighlighted(int columnIndex)
-    {
-        int startIndex = (columnIndex - 1) * rows;
-        for (int i = startIndex; i < startIndex + rows; i++)
-        {
-            GameObject coinObject = boardSetup.circles[i];
-            if (coinObject.GetComponent<Coin>().isEmpty)
-            {
-                coinObject.GetComponent<SpriteRenderer>().color = normalColor;
+                coinObject.GetComponent<SpriteRenderer>().color = color;
             }
         }
     }
@@ -128,6 +130,6 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        return 0;
+        return -1;
     }
 }
