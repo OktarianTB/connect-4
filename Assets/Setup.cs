@@ -19,7 +19,7 @@ public class Setup : MonoBehaviour
 
     void Start()
     {
-        if(!circlePrefab || !bottomLeft || !topRight)
+        if (!circlePrefab || !bottomLeft || !topRight)
         {
             Debug.LogWarning("Objects missing in inspector.");
             return;
@@ -30,10 +30,15 @@ public class Setup : MonoBehaviour
         width = Mathf.Abs(bottomLeft.position.x - topRight.position.x);
         height = Mathf.Abs(bottomLeft.position.y - topRight.position.y);
 
-        spacing = (width + gap) / (columns + 1);
+        GenerateBoard();
+    }
 
+    private void GenerateBoard()
+    {
         for (int i = 1; i < columns + 1; i++)
         {
+            spacing = (width + gap) / (columns + 1);
+
             for (int j = 1; j < rows + 1; j++)
             {
                 float spawnX = bottomLeft.position.x + spacing * i - gap / 2;
@@ -46,5 +51,4 @@ public class Setup : MonoBehaviour
             }
         }
     }
-    
 }
